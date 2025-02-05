@@ -1,7 +1,6 @@
-#!/usr/bin/env node
+// #!/usr/bin/env node
 
-async function main() {
-  const apiKey = process.env.HONEYCOMB_API_KEY;
+async function main(apiKey, datasetName) {
   if (!apiKey) {
     console.log("no HONEYCOMB_API_KEY environment variable");
     process.exit(0);
@@ -25,7 +24,7 @@ async function main() {
       process.exit(1);
     }
 
-    const envUrl = `https://ui.honeycomb.io/${teamSlug}/environments/${envSlug}/datasets/${process.env.DATASET_NAME}/home`;
+    const envUrl = `https://ui.honeycomb.io/${teamSlug}/environments/${envSlug}/datasets/${datasetName}`;
     console.log("Look for events in:", envUrl);
   } catch (error) {
     console.error("Error:", error.message);
@@ -33,4 +32,6 @@ async function main() {
   }
 }
 
-main();
+// main(process.env.HONEYCOMB_API_KEY, process.env.DATASET_NAME);
+
+module.exports = main;

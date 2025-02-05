@@ -1,7 +1,10 @@
+const printHoneycombLink = require("./honeycomb_whoami.js");
+
 console.log("jess is here");
 
-const datasetName = "jess-test2";
+const datasetName = process.env["DATASET_NAME"] || "jess-test2";
 const writeKey =
+  process.env["HONEYCOMB_API_KEY"] ||
   "hcaik_01jkbc0h1k1fgtnk1k4dzvx11hey4zy2nadezp80k4sg55en4krz8b8m9j";
 
 // generate events over 60 days to represent a rising count of personal checks being accepted.
@@ -44,7 +47,7 @@ const events = checksAcceptedPerDay
 // const events = [{ data: { name: "check_accepted", amount: 100 } }];
 
 const jsonString = JSON.stringify(events);
-console.log("events: " + jsonString);
+console.log("how many events: " + events.length);
 fetch(`https://api.honeycomb.io/1/batch/${datasetName}`, {
   method: "POST",
   headers: {
@@ -59,7 +62,7 @@ fetch(`https://api.honeycomb.io/1/batch/${datasetName}`, {
     return response.json();
   })
   .then((bodyJson) => {
-    console.log(bodyJson);
+    // console.log(bodyJson);
     bodyJson.forEach((singleResponse, i) => {
       if (singleResponse.status !== 202) {
         console.log(singleResponse);
@@ -68,6 +71,6 @@ fetch(`https://api.honeycomb.io/1/batch/${datasetName}`, {
     });
   });
 
-console.log("jess is done");
+printHoneycombLink(writeKey, datasetName);
 
-HONEYCOMB_API_KEY=${writeKey} honeycomb-whoami.sh
+console.log("jess is done");
