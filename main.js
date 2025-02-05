@@ -24,25 +24,28 @@ const checksAcceptedPerDay = [
 function timeOfDayAdjustment() {
   // plus or minus 4 hours
   const fourHours = 4 * 60 * 60 * 1000;
-  return Math.floor(Math.random() * fourHours * 2) - fourHours;
+  const result = Math.floor(Math.random() * fourHours * 2) - fourHours;
+  return result;
 }
 
+const now = new Date().getTime();
 function generateEventsForTheDay(params) {
   const { daysAgo, numberOfChecksAccepted } = params;
   const events = [];
-  // subtract daysAgo from the current date
-  const unixDate =
-    new Date().getTime() -
-    daysAgo * 24 * 60 * 60 * 1000 +
-    timeOfDayAdjustment();
-  const formattedDate = new Date(unixDate).toISOString();
   for (let i = 0; i < numberOfChecksAccepted; i++) {
+    const timeOfDay = timeOfDayAdjustment();
+    const unixDate = now - daysAgo * 24 * 60 * 60 * 1000 + timeOfDay;
+    const formattedDate = new Date(unixDate).toISOString();
     events.push({
       time: formattedDate,
       data: {
         name: "check accepted",
         amount: 100000 * Math.random(),
         runId,
+        timeOfDay,
+        daysAgo,
+        now,
+        formattedDate,
       },
     });
   }
