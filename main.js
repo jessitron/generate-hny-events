@@ -90,6 +90,7 @@ fetch(`https://api.honeycomb.io/1/batch/${datasetName}`, {
 
 const queryDefinition = {
   time_range: 5184000,
+  granularity: 86400,
   calculations: [
     {
       op: "COUNT",
