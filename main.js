@@ -85,6 +85,24 @@ fetch(`https://api.honeycomb.io/1/batch/${datasetName}`, {
     });
   });
 
-printHoneycombLink(writeKey, datasetName);
+const queryDefinition = {
+  time_range: 5184000,
+  calculations: [
+    {
+      op: "COUNT",
+    },
+  ],
+  filters: [
+    {
+      column: "runId",
+      op: "=",
+      value: runId,
+    },
+  ],
+  orders: [],
+  havings: [],
+  limit: 100,
+};
+printHoneycombLink(writeKey, datasetName, queryDefinition);
 
 console.log("jess is done");
