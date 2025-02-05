@@ -2,6 +2,10 @@ const printHoneycombLink = require("./honeycomb_whoami.js");
 
 console.log("jess is here");
 
+// generate an ID for this run
+const uuid = require("uuid");
+const runId = uuid.v4();
+
 const datasetName = process.env["DATASET_NAME"] || "jess-test2";
 const writeKey =
   process.env["HONEYCOMB_API_KEY"] ||
@@ -17,18 +21,28 @@ const checksAcceptedPerDay = [
 ];
 //const checksAcceptedPerDay = [1];
 
+function timeOfDayAdjustment() {
+  // plus or minus 4 hours
+  const fourHours = 4 * 60 * 60 * 1000;
+  return Math.floor(Math.random() * fourHours * 2) - fourHours;
+}
+
 function generateEventsForTheDay(params) {
   const { daysAgo, numberOfChecksAccepted } = params;
   const events = [];
   // subtract daysAgo from the current date
-  const unixDate = new Date().getTime() - daysAgo * 24 * 60 * 60 * 1000;
+  const unixDate =
+    new Date().getTime() -
+    daysAgo * 24 * 60 * 60 * 1000 +
+    timeOfDayAdjustment();
   const formattedDate = new Date(unixDate).toISOString();
   for (let i = 0; i < numberOfChecksAccepted; i++) {
     events.push({
       time: formattedDate,
       data: {
-        name: "check_accepted",
-        amount: 100,
+        name: "check accepted",
+        amount: 100000 * Math.random(),
+        runId,
       },
     });
   }
