@@ -6,8 +6,10 @@ const writeKey =
 
 const events = [
   {
-    time: new Date().toISOString(),
-    name: "test event",
+    // time: new Date().toISOString(),
+    data: {
+      name: "test event",
+    },
   },
 ];
 fetch(`https://api.honeycomb.io/1/batch/${datasetName}`, {
