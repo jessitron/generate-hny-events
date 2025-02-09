@@ -6,7 +6,9 @@ console.log("jess is here");
 const datasetName = process.env["DATASET_NAME"] || "jess-test2";
 const writeKey =
   process.env["HONEYCOMB_API_KEY"] ||
-  "hcaik_01jkbc0h1k1fgtnk1k4dzvx11hey4zy2nadezp80k4sg55en4krz8b8m9j";
+  (function () {
+    throw new Error("HONEYCOMB_API_KEY is required");
+  })();
 
 const events = generateEvents();
 const jsonString = JSON.stringify(events);
