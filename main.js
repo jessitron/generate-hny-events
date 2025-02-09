@@ -1,5 +1,5 @@
 const printHoneycombLink = require("./honeycomb_whoami.js");
-const { generateEvents, queryDefinition } = require("./ritchie-bros.js");
+const { generateEvents, queryDefinition } = require("./release-performance.js");
 
 console.log("jess is here");
 
@@ -13,6 +13,10 @@ const writeKey =
 const events = generateEvents();
 const jsonString = JSON.stringify(events);
 console.log("how many events: " + events.length);
+if (events.length === 0) {
+  console.log("No events to send");
+  return;
+}
 fetch(`https://api.honeycomb.io/1/batch/${datasetName}`, {
   method: "POST",
   headers: {
