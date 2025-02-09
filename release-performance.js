@@ -5,6 +5,16 @@ const runId = uuid.v4();
 const fs = require("fs");
 const { parse } = require("csv-parse/sync");
 
+const now = new Date().getTime();
+
+const commonAttributes = {
+  name: "GET /word",
+  "service.name": "word-lambda",
+  "deploy.environment": "production",
+  "deploy.region": "us-west-2",
+  runId,
+};
+
 function generateEvents() {
   const fileContent = fs.readFileSync("input/release-branch-perf.csv", "utf-8");
   const records = parse(fileContent, {
@@ -12,27 +22,47 @@ function generateEvents() {
     skip_empty_lines: true,
   });
 
-  console.log(records);
-  return [];
+  const maxTimeIncrement = Math.max(
+    ...records.map((record) => record["time.increment"])
+  );
+  console.log(" max time increment: " + maxTimeIncrement);
+  const events = records.map((record) => {
+    const minutesAgo = maxTimeIncrement - record["time.increment"] - 2; // put it a few min into the future
+    const unixDate = now - minutesAgo * 60 * 1000;
+    const formattedDate = new Date(unixDate).toISOString();
+    return {
+      time: formattedDate,
+      data: {
+        ...commonAttributes,
+        ...record,
+        "lambda.cost": record["duration_ms"] * 0.00001667, // $0.00001667 per ms
+      },
+    };
+  });
+  return events;
 }
 
 const queryDefinition = {
-  time_range: 5184000,
-  granularity: 86400,
+  time_range: 28800,
+  granularity: 0,
+  breakdowns: ["release.id"],
   calculations: [
     {
-      op: "SUM(duration_ms)",
+      op: "SUM",
+      column: "duration_ms",
     },
   ],
-  filters: [
+  filters: [],
+  filter_combination: "AND",
+  orders: [
     {
-      column: "runId",
-      op: "=",
-      value: runId,
+      column: "duration_ms",
+      op: "SUM",
+      order: "descending",
     },
   ],
-  orders: [],
   havings: [],
+  trace_joins: [],
   limit: 100,
 };
 
