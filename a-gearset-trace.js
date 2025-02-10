@@ -211,6 +211,8 @@ function spansToEvents(spans, parentId, parentStartTimeOffset, parentDuration) {
   return spans
     .map((span) => {
       const spanId = uuid.v4();
+      const startTimeOffset =
+        nextStartTimeOffset + useParentTime(span.time_offset || 0);
       if (span.consumePercentRemainingParentTime) {
         span.duration_ms = useParentTime(
           parentDurationRemaining * span.consumePercentRemainingParentTime
@@ -218,8 +220,6 @@ function spansToEvents(spans, parentId, parentStartTimeOffset, parentDuration) {
       } else {
         useParentTime(span.duration_ms);
       }
-      const startTimeOffset =
-        nextStartTimeOffset + useParentTime(span.time_offset || 0);
       const event = {
         time: new Date(beginningOfTrace + startTimeOffset).toISOString(),
         data: {

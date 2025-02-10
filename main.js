@@ -39,6 +39,7 @@ fetch(`https://api.honeycomb.io/1/batch/${datasetName}`, {
   })
   .then((bodyJson) => {
     // console.log(bodyJson);
+    console.log("responses received for " + bodyJson.length + " events");
     bodyJson.forEach((singleResponse, i) => {
       if (singleResponse.status !== 202) {
         console.log(singleResponse);
