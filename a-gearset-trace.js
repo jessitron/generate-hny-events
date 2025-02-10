@@ -17,20 +17,16 @@ function jitter(range) {
   return Math.floor(Math.random() * range) - range / 2;
 }
 
-const totalRequestTime = 20 * 60 * 1000 + jitter(2000);
+const totalRequestDuration = 20 * 60 * 1000 + jitter(2000);
 const timeAfterStepsRun = 129;
-var usedTime = 0;
-function useTime(duration) {
-  usedTime += duration;
-  return duration;
-}
+
 const spans = [
   {
     name: "deploy",
     "service.name": "job-runner",
     "span.kind": "server",
     time_offset: 0,
-    duration_ms: totalRequestTime, // TODO: prolly need this to be a sum of the children
+    duration_ms: totalRequestDuration, // TODO: prolly need this to be a sum of the children
     status: "success",
     "job.steps": 8,
     children: [
@@ -39,8 +35,8 @@ const spans = [
         "service.name": "job-runner",
         "span.kind": "client",
         "http.url": "grpc://build-config/definition",
-        time_offset: useTime(10),
-        duration_ms: useTime(80 + jitter(20)),
+        time_offset: 10,
+        duration_ms: 80 + jitter(20),
         "http.status": 200,
         children: [
           {
@@ -62,8 +58,7 @@ const spans = [
         "span.kind": "internal",
         "step.id": uuid.v4(),
         "responsible.party": "gearset",
-        time_offset: usedTime,
-        duration_ms: totalRequestTime - usedTime - timeAfterStepsRun, // this doesn't use time, the steps do
+        consumePercentRemainingParentTime: 0.99,
         children: [
           {
             name: "task: git pull",
@@ -73,8 +68,7 @@ const spans = [
             "vcs.provider": "github",
             "step.id": uuid.v4(),
             "responsible.party": "source-control-provider",
-            time_offset: usedTime,
-            duration_ms: useTime(435 + jitter(100)),
+            duration_ms: 435 + jitter(100),
             "span.kind": "client",
           },
           {
@@ -83,8 +77,7 @@ const spans = [
             "file.count": 47,
             "step.id": uuid.v4(),
             "responsible.party": "gearset, customer input",
-            time_offset: usedTime,
-            duration_ms: useTime(223 + jitter(20)),
+            duration_ms: 223 + jitter(20),
           },
           {
             name: "task: generate dependency graph",
@@ -92,8 +85,7 @@ const spans = [
             "dependency.count": 14,
             "step.id": uuid.v4(),
             "responsible.party": "gearset, customer input",
-            time_offset: usedTime,
-            duration_ms: useTime(43 + jitter(1)),
+            duration_ms: 43 + jitter(1),
           },
           {
             name: "task: salesforce auth",
@@ -101,8 +93,7 @@ const spans = [
             "target.org": "staging-org-3",
             "step.id": uuid.v4(),
             "responsible.party": "salesforce",
-            time_offset: usedTime,
-            duration_ms: useTime(10000 + jitter(1000)),
+            duration_ms: 10000 + jitter(1000),
           },
           {
             name: "task: retrieve target org metadata",
@@ -110,14 +101,13 @@ const spans = [
             "api.calls": 8,
             "step.id": uuid.v4(),
             "responsible.party": "salesforce",
-            time_offset: usedTime,
-            duration_ms: 176234, // the children will use the time
+            consumePercentRemainingParentTime: 0.3,
             children: [
               {
                 name: "GET /metadata-types",
                 "task.name": "list metadata types",
-                time_offset: usedTime + useTime(10),
-                duration_ms: useTime(445),
+                time_offset: 10,
+                consumePercentRemainingParentTime: 0.18,
                 "api.calls": 1,
                 "metadata.types.count": 42,
               },
@@ -125,40 +115,35 @@ const spans = [
               {
                 name: "GET /metadata-types/CustomObject",
                 "task.name": "retrieve CustomObject definitions",
-                time_offset: usedTime,
-                duration_ms: useTime(890),
+                consumePercentRemainingParentTime: 0.28,
                 "api.calls": 2,
                 "objects.count": 15,
               },
               {
                 name: "GET /metadata-types/ApexClass",
                 "task.name": "retrieve Apex classes",
-                time_offset: usedTime,
-                duration_ms: useTime(567),
+                consumePercentRemainingParentTime: 0.5,
                 "api.calls": 1,
                 "classes.count": 23,
               },
               {
                 name: "GET /metadata-types/Workflow",
                 "task.name": "retrieve Workflows",
-                time_offset: usedTime,
-                duration_ms: useTime(678),
+                consumePercentRemainingParentTime: 0.25,
                 "api.calls": 2,
                 "workflows.count": 8,
               },
               {
                 name: "GET /metadata-types/Profile",
                 "task.name": "retrieve Profiles",
-                time_offset: usedTime,
-                duration_ms: useTime(654) + useTime(11) * 0, // look, a little gap after this one
+                consumePercentRemainingParentTime: 0.9,
                 "api.calls": 2,
                 "profiles.count": 6,
               },
               {
                 name: "validate completeness",
                 "task.name": "validate metadata completeness",
-                time_offset: usedTime,
-                duration_ms: useTime(21),
+                consumePercentRemainingParentTime: 1,
                 "validation.errors": 0,
               },
             ],
@@ -168,8 +153,7 @@ const spans = [
             "task.name": "diff changes",
             "step.id": uuid.v4(),
             "responsible.party": "gearset",
-            time_offset: usedTime,
-            duration_ms: useTime(230),
+            duration_ms: 230,
             "changes.count": 3,
             "changes.types": ["CustomField", "ValidationRule", "ApexClass"],
           },
@@ -178,8 +162,7 @@ const spans = [
             "task.name": "validate deployment",
             "step.id": uuid.v4(),
             "responsible.party": "gearset",
-            time_offset: usedTime,
-            duration_ms: useTime(273),
+            duration_ms: 273,
             "api.calls": 4,
           },
           {
@@ -187,8 +170,7 @@ const spans = [
             "task.name": "run apex tests",
             "step.id": uuid.v4(),
             "responsible.party": "customer",
-            time_offset: usedTime,
-            duration_ms: useTime(32453),
+            duration_ms: 32453,
             "tests.total": 156,
             "tests.failed": 0,
           },
@@ -197,7 +179,6 @@ const spans = [
             "task.name": "deploy metadata",
             "step.id": uuid.v4(),
             "responsible.party": "salesforce",
-            time_offset: usedTime,
             consumePercentRemainingParentTime: 0.99,
             "api.calls": 6,
             "components.deployed": 3,
@@ -207,8 +188,7 @@ const spans = [
             "task.name": "verify deployment",
             "step.id": uuid.v4(),
             "responsible.party": "gearset",
-            time_offset: usedTime,
-            duration_ms: useTime(1041),
+            consumePercentRemainingParentTime: 1,
             "api.calls": 2,
           },
         ],
@@ -218,11 +198,14 @@ const spans = [
 ];
 
 const now = new Date().getTime();
-const beginningOfTrace = now - totalRequestTime;
-function spansToEvents(spans, parentId, parentTime) {
-  var parentTimeRemaining = parentTime;
+const beginningOfTrace = now - totalRequestDuration;
+function spansToEvents(spans, parentId, parentStartTimeOffset, parentDuration) {
+  var parentDurationRemaining = parentDuration || 0;
+  var nextStartTimeOffset = parentStartTimeOffset || 0;
+
   function useParentTime(duration) {
-    parentTimeRemaining -= duration;
+    parentDurationRemaining -= duration;
+    nextStartTimeOffset += duration;
     return duration;
   }
   return spans
@@ -230,16 +213,20 @@ function spansToEvents(spans, parentId, parentTime) {
       const spanId = uuid.v4();
       if (span.consumePercentRemainingParentTime) {
         span.duration_ms = useParentTime(
-          parentTimeRemaining * span.consumePercentRemainingParentTime
+          parentDurationRemaining * span.consumePercentRemainingParentTime
         );
       } else {
         useParentTime(span.duration_ms);
       }
+      const startTimeOffset =
+        nextStartTimeOffset + useParentTime(span.time_offset || 0);
       const event = {
-        time: new Date(beginningOfTrace + span.time_offset).toISOString(),
+        time: new Date(beginningOfTrace + startTimeOffset).toISOString(),
         data: {
           ...commonAttributes,
           ...span,
+          parentDurationRemaining,
+          "span.children": span.children?.length || 0,
           "trace.parent_id": parentId,
           "trace.span_id": spanId,
         },
@@ -247,7 +234,12 @@ function spansToEvents(spans, parentId, parentTime) {
       if (span.children) {
         return [
           event,
-          ...spansToEvents(span.children, spanId, span.duration_ms),
+          ...spansToEvents(
+            span.children,
+            spanId,
+            startTimeOffset,
+            span.duration_ms
+          ),
         ];
       }
       return event;
@@ -261,8 +253,8 @@ function generateEvents() {
 
 const queryDefinition = {
   trace_id: traceId,
-  trace_start_ts: Math.round(beginningOfTrace / 1000),
-  trace_end_ts: Math.round(now / 1000),
+  trace_start_ts: Math.round(beginningOfTrace / 1000) - 60,
+  trace_end_ts: Math.round(now / 1000) + 60,
   /*
 https://ui.honeycomb.io/<team>/environments/<environment>/datasets/<dataset>/trace?trace_id=<traceId>
   &span=<spanId>
