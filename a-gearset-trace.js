@@ -198,7 +198,7 @@ const spans = [
             "step.id": uuid.v4(),
             "responsible.party": "salesforce",
             time_offset: usedTime,
-            duration_ms: useTime(298902),
+            consumePercentRemainingParentTime: 0.99,
             "api.calls": 6,
             "components.deployed": 3,
           },
@@ -219,10 +219,22 @@ const spans = [
 
 const now = new Date().getTime();
 const beginningOfTrace = now - totalRequestTime;
-function spansToEvents(spans, parentId) {
+function spansToEvents(spans, parentId, parentTime) {
+  var parentTimeRemaining = parentTime;
+  function useParentTime(duration) {
+    parentTimeRemaining -= duration;
+    return duration;
+  }
   return spans
     .map((span) => {
       const spanId = uuid.v4();
+      if (span.consumePercentRemainingParentTime) {
+        span.duration_ms = useParentTime(
+          parentTimeRemaining * span.consumePercentRemainingParentTime
+        );
+      } else {
+        useParentTime(span.duration_ms);
+      }
       const event = {
         time: new Date(beginningOfTrace + span.time_offset).toISOString(),
         data: {
@@ -233,7 +245,10 @@ function spansToEvents(spans, parentId) {
         },
       };
       if (span.children) {
-        return [event, ...spansToEvents(span.children, spanId)];
+        return [
+          event,
+          ...spansToEvents(span.children, spanId, span.duration_ms),
+        ];
       }
       return event;
     })
