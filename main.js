@@ -1,5 +1,5 @@
 const printHoneycombLink = require("./honeycomb_whoami.js");
-const { generateEvents, queryDefinition } = require("./release-performance.js");
+const { generateEvents, queryDefinition } = require("./a-gearset-trace.js");
 
 console.log("jess is here");
 

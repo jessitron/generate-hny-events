@@ -24,7 +24,9 @@ async function main(apiKey, datasetName, queryDefinition) {
       process.exit(1);
     }
 
-    const envUrl = `https://ui.honeycomb.io/${teamSlug}/environments/${envSlug}/datasets/${datasetName}${queryString(queryDefinition)}`;
+    const envUrl = `https://ui.honeycomb.io/${teamSlug}/environments/${envSlug}/datasets/${datasetName}${queryString(
+      queryDefinition
+    )}`;
     console.log("Look for events in:", envUrl);
   } catch (error) {
     console.error("Error:", error.message);
@@ -33,8 +35,20 @@ async function main(apiKey, datasetName, queryDefinition) {
 }
 
 function queryString(queryDefinition) {
-return `?query=${encodeURIComponent(JSON.stringify(queryDefinition))}`;
-}  
+  if (queryDefinition.calculations) {
+    return `?query=${encodeURIComponent(JSON.stringify(queryDefinition))}`;
+  }
+  if (queryDefinition.trace_id) {
+    return `/trace?trace_id=${queryDefinition.trace_id}&trace_start_ts=${queryDefinition.trace_start_ts}&trace_end_ts=${queryDefinition.trace_end_ts}`;
+  }
+}
+
+/*
+https://ui.honeycomb.io/<team>/environments/<environment>/datasets/<dataset>/trace?trace_id=<traceId>
+  &span=<spanId>
+  &trace_start_ts=<ts>
+  &trace_end_ts=<ts>
+  */
 
 // main(process.env.HONEYCOMB_API_KEY, process.env.DATASET_NAME);
 
