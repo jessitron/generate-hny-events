@@ -1,5 +1,8 @@
 const printHoneycombLink = require("./honeycomb_whoami.js");
-const { generateEvents, queryDefinition } = require("./a-gearset-trace.js");
+
+// CHANGE THIS to use a different generator
+//const { generateEvents, queryDefinition } = require("./a-gearset-trace.js");
+const { generateEvents, queryDefinition } = require("./ritchie-bros.js");
 
 console.log("jess is here");
 
